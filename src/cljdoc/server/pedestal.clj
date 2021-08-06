@@ -446,7 +446,6 @@
   (interceptor/interceptor
    {:name ::api-docset
     :enter (fn api-docset [{:keys [cache-bundle] :as ctx}]
-             ;; (log/info (pr-str cache-bundle))
              (->> (if cache-bundle
                     {:status 200
                      :headers {"Content-Type" "application/json"}
