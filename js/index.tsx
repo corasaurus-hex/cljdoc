@@ -34,8 +34,7 @@ if (searchNode && searchNode.dataset) {
   );
 }
 
-const navigatorNode = document.querySelector("#js--cljdoc-navigator");
-navigatorNode && render(<Navigator />, navigatorNode);
+render(<Navigator />, document.querySelector("#js--cljdoc-navigator")!);
 
 if (isNSPage()) {
   initSrollIndicator();
