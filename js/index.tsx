@@ -10,10 +10,9 @@ import {
   initToggleRaw,
   restoreSidebarScrollPos,
   toggleMetaDialog,
-  addPrevNextPageKeyHandlers
+  addPrevNextPageKeyHandlers,
+  trackSidebarScrollPos
 } from "./cljdoc";
-
-export type SidebarScrollPos = { page: string; scrollTop: number };
 
 trackProjectOpened();
 restoreSidebarScrollPos();
@@ -47,12 +46,4 @@ if (isProjectDocumentationPage()) {
   addPrevNextPageKeyHandlers();
 }
 
-window.onbeforeunload = function () {
-  var sidebar = Array.from(document.querySelectorAll(".js--main-sidebar"))[0];
-  if (sidebar) {
-    var scrollTop = sidebar.scrollTop;
-    var page = window.location.pathname.split("/").slice(0, 5).join("/");
-    var data: SidebarScrollPos = { page: page, scrollTop: scrollTop };
-    localStorage.setItem("sidebarScrollPos", JSON.stringify(data));
-  }
-};
+trackSidebarScrollPos();

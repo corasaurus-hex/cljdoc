@@ -138,6 +138,20 @@ const addPrevNextPageKeyHandlers = () => {
   }
 };
 
+export type SidebarScrollPos = { page: string; scrollTop: number };
+
+const trackSidebarScrollPos = () => {
+  window.onbeforeunload = () => {
+    var sidebar = document.querySelector(".js--main-sidebar");
+    if (sidebar) {
+      var scrollTop = sidebar.scrollTop;
+      var page = window.location.pathname.split("/").slice(0, 5).join("/");
+      var data: SidebarScrollPos = { page: page, scrollTop: scrollTop };
+      localStorage.setItem("sidebarScrollPos", JSON.stringify(data));
+    }
+  };
+};
+
 export {
   initScrollIndicator,
   initToggleRaw,
@@ -145,5 +159,6 @@ export {
   toggleMetaDialog,
   isNSPage,
   isProjectDocumentationPage,
-  addPrevNextPageKeyHandlers
+  addPrevNextPageKeyHandlers,
+  trackSidebarScrollPos
 };
