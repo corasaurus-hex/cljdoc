@@ -1,55 +1,75 @@
-import { h, Component } from "preact";
+import { h } from "preact";
+import { useMemo, useState } from "preact/compat";
 
-type MobileNavProps = any;
+const MobileNavBar = (props: {
+  message: string;
+  icon: string;
+  onClick: h.JSX.MouseEventHandler<HTMLButtonElement>;
+}) => (
+  <div class="bg-light-gray">
+    <button
+      class="outline-0 bw0 bg-transparent w-100 tl pa2 pointer"
+      onClick={props.onClick}
+    >
+      <img
+        class="dib mr2 v-mid"
+        src={"https://microicon-clone.vercel.app/" + props.icon + "/32"}
+        height="32"
+      />
+      <span class="dib">{props.message}</span>
+    </button>
+  </div>
+);
 
-type MobileNavState = {
-  mainViewScrollPos: number;
-  navViewScrollPos: number;
-  showNav: boolean;
-};
+const findMainScrollView = () =>
+  document.querySelector(".js--main-scroll-view")!;
 
-export class MobileNav extends Component<MobileNavProps, MobileNavState> {
-  constructor() {
-    super();
-    this.toggleNav = this.toggleNav.bind(this);
-  }
+const findSidebar = () => document.querySelector(".js--main-sidebar")!;
 
-  toggleNav() {
-    let mainScrollView = document.querySelector(".js--main-scroll-view");
-    let mainSidebar = document.querySelector(".js--main-sidebar");
-    let isNavShown = mainScrollView && mainScrollView.classList.contains("dn");
+export const MobileNav = () => {
+  const [navState, setNavState] = useState({
+    showNav: false,
+    navViewScrollPos: 0,
+    mainViewScrollPos: 0
+  });
+
+  const mainScrollView = useMemo(findMainScrollView, []);
+  const mainSidebar = useMemo(findSidebar, []);
+
+  const toggleNav = () => {
+    const scrollPos = window.scrollY;
+    const isNavShown = mainScrollView.classList.contains("dn");
+
     if (isNavShown) {
-      let scrollPos = window.scrollY;
-      mainScrollView!.classList.remove("dn"); // show main scroll view / content area
-      mainSidebar && mainSidebar.classList.replace("db", "dn"); // hide sidebar
-      window.scrollTo(0, this.state.mainViewScrollPos); // scroll after(!) swapping content
-      this.setState({ showNav: false, navViewScrollPos: scrollPos });
+      mainScrollView.classList.remove("dn"); // show main scroll view / content area
+      mainSidebar.classList.replace("db", "dn"); // hide sidebar
+      mainSidebar.classList.remove("flex-grow-1"); // remove class we add in other branch
+      window.scrollTo(0, navState.mainViewScrollPos); // scroll after(!) swapping content
+      setNavState({ ...navState, showNav: false, navViewScrollPos: scrollPos });
     } else {
-      let scrollPos = window.scrollY;
-      mainScrollView && mainScrollView.classList.add("dn"); // hide main scroll view / content area
-      mainSidebar && mainSidebar.classList.add("flex-grow-1"); // make sure nav fills width of screen
-      mainSidebar && mainSidebar.classList.replace("dn", "db"); // show sidebar
-      window.scrollTo(0, this.state.navViewScrollPos); // scroll after(!) swapping content
-      this.setState({ showNav: true, mainViewScrollPos: scrollPos });
+      mainScrollView.classList.add("dn"); // hide main scroll view / content area
+      mainSidebar.classList.add("flex-grow-1"); // make sure nav fills width of screen
+      mainSidebar.classList.replace("dn", "db"); // show sidebar
+      window.scrollTo(0, navState.navViewScrollPos); // scroll after(!) swapping content
+      setNavState({ ...navState, showNav: true, mainViewScrollPos: scrollPos });
     }
-  }
+  };
 
-  render(_props: MobileNavProps, state: MobileNavState) {
-    let btnMsg = state.showNav
-      ? "Back to Content"
-      : "Tap for Articles & Namespaces";
-    let btnIcon = state.showNav ? "chevronLeft" : "list";
-    let btnSrc = "https://microicon-clone.vercel.app/" + btnIcon + "/32";
+  if (navState.showNav) {
     return (
-      <div class="bg-light-gray">
-        <button
-          class="outline-0 bw0 bg-transparent w-100 tl pa2"
-          onClick={this.toggleNav}
-        >
-          <img class="dib mr2 v-mid" src={btnSrc} height="32" />
-          <span class="dib">{btnMsg}</span>
-        </button>
-      </div>
+      <MobileNavBar
+        message={"Back to Content"}
+        icon={"chevronLeft"}
+        onClick={toggleNav}
+      />
     );
   }
-}
+
+  return (
+    <MobileNavBar
+      message={"Tap for Articles & Namespaces"}
+      icon={"list"}
+      onClick={toggleNav}
+    />
+  );
+};

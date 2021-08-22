@@ -43,8 +43,7 @@ if (isNSPage()) {
 }
 
 if (isProjectDocumentationPage()) {
-  const mobileNav = document.querySelector("#js--mobile-nav");
-  mobileNav && render(<MobileNav />, mobileNav);
+  render(<MobileNav />, document.querySelector("#js--mobile-nav")!);
   toggleMetaDialog();
   addPrevNextPageKeyHandlers();
 }
