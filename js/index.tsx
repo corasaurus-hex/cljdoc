@@ -6,7 +6,7 @@ import { Navigator } from "./navigator";
 import {
   isNSPage,
   isProjectDocumentationPage,
-  initSrollIndicator,
+  initScrollIndicator,
   initToggleRaw,
   restoreSidebarScrollPos,
   toggleMetaDialog,
@@ -37,7 +37,7 @@ if (searchNode && searchNode.dataset) {
 render(<Navigator />, document.querySelector("#js--cljdoc-navigator")!);
 
 if (isNSPage()) {
-  initSrollIndicator();
+  initScrollIndicator();
   initToggleRaw();
 }
 

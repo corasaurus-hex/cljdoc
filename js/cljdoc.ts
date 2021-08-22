@@ -1,100 +1,100 @@
-function isNSPage(): boolean {
-  return !!document.querySelector(".ns-page");
-}
+const isNSPage = () => !!document.querySelector(".ns-page");
 
-function isProjectDocumentationPage(): boolean {
-  let pathSegs = window.location.pathname.split("/");
-  return pathSegs.length >= 5 && pathSegs[1] == "d";
-}
+const pathSegments = () => window.location.pathname.split("/");
 
-function initSrollIndicator(): void {
-  var mainScrollView = document.querySelector(".js--main-scroll-view");
-  var sidebarScrollView = document.querySelector(
+const isProjectDocumentationPage = () =>
+  pathSegments().length > 5 && pathSegments()[1] === "d";
+
+const isElementVisible = (container: Element, element: Element) => {
+  const { y: elementTop, height: elementHeight } =
+      element.getBoundingClientRect(),
+    elementBottom = elementTop + elementHeight,
+    containerBottom = window.innerHeight,
+    containerTop = containerBottom - container.clientHeight;
+  return elementTop <= containerBottom && elementBottom >= containerTop;
+};
+
+const initScrollIndicator = () => {
+  const mainScrollView = document.querySelector(".js--main-scroll-view");
+  const sidebarScrollView = document.querySelector(
     ".js--namespace-contents-scroll-view"
   );
-  var defBlocks = Array.from(document.querySelectorAll(".def-block"));
-  var defItems = Array.from(document.querySelectorAll(".def-item"));
+  const defBlocks = Array.from(document.querySelectorAll(".def-block"));
+  const defItems = Array.from(document.querySelectorAll(".def-item"));
 
-  function isElementVisible(container: Element, el: Element) {
-    var { y: etop, height } = el.getBoundingClientRect(),
-      ebottom = etop + height,
-      cbottom = window.innerHeight,
-      ctop = cbottom - container.clientHeight;
-    return etop <= cbottom && ebottom >= ctop;
-  }
+  const drawScrollIndicator = () => {
+    defBlocks.forEach((defBlock: Element, idx) => {
+      const defItem = defItems[idx];
 
-  function drawScrollIndicator() {
-    defBlocks.forEach((el: Element, idx) => {
-      var defItem = defItems[idx];
       if (
         mainScrollView &&
         sidebarScrollView &&
-        isElementVisible(mainScrollView, el)
+        isElementVisible(mainScrollView, defBlock)
       ) {
         defItem.classList.add("scroll-indicator");
         if (idx === 0) {
           sidebarScrollView.scrollTop = 1;
-        } else if (isElementVisible(sidebarScrollView, defItem) === false) {
+        } else if (!isElementVisible(sidebarScrollView, defItem)) {
           defItem.scrollIntoView();
         }
       } else {
         defItem.classList.remove("scroll-indicator");
       }
     });
-  }
+  };
 
   mainScrollView &&
     mainScrollView.addEventListener("scroll", drawScrollIndicator);
 
   drawScrollIndicator();
-}
+};
 
-function initToggleRaw() {
-  let toggles: HTMLElement[] = Array.from(
+const initToggleRaw = () => {
+  const toggleRaw = (event: MouseEvent) => {
+    const toggle = event.target as HTMLAnchorElement;
+    const parent = toggle.parentElement!;
+    const markdowns = parent.querySelectorAll(".markdown");
+    const raws = parent.querySelectorAll(".raw");
+
+    markdowns &&
+      markdowns.forEach((markdown, idx) => {
+        const raw = raws[idx];
+        if (markdown.classList.contains("dn")) {
+          markdown.classList.remove("dn");
+          raw.classList.add("dn");
+          toggle.innerText = "raw docstring";
+        } else {
+          markdown.classList.add("dn");
+          raw.classList.remove("dn");
+          toggle.innerText = "formatted docstring";
+        }
+      });
+  };
+
+  const toggles: HTMLElement[] = Array.from(
     document.querySelectorAll(".js--toggle-raw")
   );
 
-  function addToggleHandlers() {
-    toggles.forEach(el => {
-      el.addEventListener("click", function () {
-        let parent = el.parentElement;
-        let markdowns = parent && parent.querySelectorAll(".markdown");
-        let raws = parent && parent.querySelectorAll(".raw");
-        markdowns &&
-          markdowns.forEach((markdown, idx) => {
-            let raw = raws && raws[idx];
-            if (markdown.classList.contains("dn")) {
-              markdown.classList.remove("dn");
-              raw && raw.classList.add("dn");
-              el.innerText = "raw docstring";
-            } else {
-              markdown.classList.add("dn");
-              raw && raw.classList.remove("dn");
-              el.innerText = "formatted docstring";
-            }
-          });
-      });
-    });
-  }
+  toggles.forEach(toggle => {
+    toggle.addEventListener("click", toggleRaw);
+  });
+};
 
-  addToggleHandlers();
-}
-
-function restoreSidebarScrollPos() {
-  var scrollPosData = JSON.parse(
+const restoreSidebarScrollPos = () => {
+  const scrollPosData = JSON.parse(
     localStorage.getItem("sidebarScrollPos") || "null"
   );
-  var page = window.location.pathname.split("/").slice(0, 5).join("/");
+  const page = window.location.pathname.split("/").slice(0, 5).join("/");
 
-  if (scrollPosData && page == scrollPosData.page) {
-    var mainSidebar = document.querySelector(".js--main-sidebar");
+  if (scrollPosData && scrollPosData.page === page) {
+    const mainSidebar = document.querySelector(".js--main-sidebar");
     if (mainSidebar) {
       mainSidebar.scrollTop = scrollPosData.scrollTop;
     }
   }
 
   localStorage.removeItem("sidebarScrollPos");
-}
+};
 
 function toggleMetaDialog() {
   if (document.querySelector(".js--main-scroll-view")) {
@@ -118,27 +118,28 @@ function toggleMetaDialog() {
   }
 }
 
-function addPrevNextPageKeyHandlers() {
+const addPrevNextPageKeyHandlers = () => {
   const prevLink: HTMLAnchorElement | null = document.querySelector(
     "a#prev-article-page-link"
   );
   const nextLink: HTMLAnchorElement | null = document.querySelector(
     "a#next-article-page-link"
   );
+
   if (prevLink || nextLink) {
-    document.addEventListener("keydown", function (e) {
-      if (e.code === "ArrowLeft" && prevLink) {
+    document.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (prevLink && e.key === "ArrowLeft") {
         document.location.href = prevLink.href;
       }
-      if (e.code === "ArrowRight" && nextLink) {
+      if (nextLink && e.key === "ArrowRight") {
         document.location.href = nextLink.href;
       }
     });
   }
-}
+};
 
 export {
-  initSrollIndicator,
+  initScrollIndicator,
   initToggleRaw,
   restoreSidebarScrollPos,
   toggleMetaDialog,
