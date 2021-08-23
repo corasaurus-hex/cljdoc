@@ -1,4 +1,5 @@
 import { h, Component } from "preact";
+import { useEffect } from "preact/hooks";
 import { ResultsView } from "./listselect";
 import { CljdocProject } from "./switcher";
 
@@ -23,11 +24,11 @@ function debounced<T extends (...args: any[]) => any>(
   };
 }
 
-function cleanSearchStr(str: string) {
+const cleanSearchStr = (str: string) => {
   // replace square and curly brackets in case people copy from
   // Leiningen/Boot files or deps.edn
   return str.replace(/[\{\}\[\]\"]+/g, "");
-}
+};
 
 export type RawSearchResult = {
   ["artifact-id"]: string;
@@ -59,25 +60,16 @@ type SearchResults = {
 
 type LoadCallback = (sr: SearchResult[]) => any;
 
-const renameKeys = <T, U>(obj: T, keys: { [key: string]: string }): U => {
-  const newObj: { [key: string]: any } = {};
-
-  for (const [k, v] of Object.entries(obj)) {
-    const key = keys[k] || k;
-    newObj[key] = v;
-  }
-
-  return newObj as U;
-};
-
 const refineSearchResults = (raw: RawSearchResults): SearchResults => ({
   count: raw.count,
-  results: raw.results.map(r =>
-    renameKeys<RawSearchResult, SearchResult>(r, {
-      "artifact-id": "artifact_id",
-      "group-id": "group_id"
-    })
-  )
+  results: raw.results.map(r => ({
+    artifact_id: r["artifact-id"],
+    group_id: r["group-id"],
+    description: r.description,
+    origin: r.origin,
+    version: r.version,
+    score: r.score
+  }))
 });
 
 const loadResults = (str: string, cb: LoadCallback) => {
@@ -87,6 +79,8 @@ const loadResults = (str: string, cb: LoadCallback) => {
     .then(response => response.json())
     .then((json: RawSearchResults) => cb(refineSearchResults(json).results));
 };
+
+const debouncedLoadResults = debounced(300, loadResults);
 
 type SearchInputProps = {
   onEnter: () => any;
@@ -98,58 +92,62 @@ type SearchInputProps = {
   newResultsCallback: LoadCallback;
 };
 
-class SearchInput extends Component<SearchInputProps> {
-  onKeyDown(e: KeyboardEvent) {
+const SearchInput = (props: SearchInputProps) => {
+  const {
+    onEnter,
+    focus,
+    unfocus,
+    onArrowUp,
+    onArrowDown,
+    initialValue,
+    newResultsCallback
+  } = props;
+
+  const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
-      this.props.onEnter();
+      onEnter();
     } else if (e.key === "Escape") {
-      this.props.unfocus();
+      unfocus();
     } else if (e.key === "ArrowUp") {
       e.preventDefault(); // prevents caret from moving in input field
-      this.props.onArrowUp();
+      onArrowUp();
     } else if (e.key === "ArrowDown") {
       e.preventDefault(); // prevents caret from moving in input field
-      this.props.onArrowDown();
+      onArrowDown();
     }
-  }
+  };
 
-  componentDidMount() {
-    if (this.props.initialValue) {
-      loadResults(
-        cleanSearchStr(this.props.initialValue),
-        this.props.newResultsCallback
-      );
+  useEffect(() => {
+    if (initialValue) {
+      loadResults(cleanSearchStr(initialValue), newResultsCallback);
     }
-  }
+  }, [initialValue]);
 
-  render(props: SearchInputProps) {
-    const debouncedLoader = debounced(300, loadResults);
+  const unfocusLater = (_e: Event) => setTimeout(unfocus, 200);
+  const focusNow = (_e: Event) => focus();
+  const onInput = (e: Event) => {
+    const target = e.target as HTMLFormElement;
+    debouncedLoadResults(cleanSearchStr(target.value), newResultsCallback);
+  };
 
-    return (
-      <input
-        autofocus={true}
-        placeholder="NEW! Jump to docs..."
-        className="pa2 w-100 br1 border-box b--blue ba input-reset"
-        onFocus={(_e: Event) => props.focus()}
-        onBlur={(_e: Event) => setTimeout(_ => props.unfocus(), 200)}
-        onKeyDown={(e: KeyboardEvent) => this.onKeyDown(e)}
-        onInput={(e: Event) => {
-          const target = e.target as HTMLFormElement;
-          debouncedLoader(
-            cleanSearchStr(target.value),
-            props.newResultsCallback
-          );
-        }}
-      />
-    );
-  }
-}
+  return (
+    <input
+      autofocus={true}
+      placeholder="NEW! Jump to docs..."
+      className="pa2 w-100 br1 border-box b--blue ba input-reset"
+      onFocus={focusNow}
+      onBlur={unfocusLater}
+      onKeyDown={onKeyDown}
+      onInput={onInput}
+    />
+  );
+};
 
-function resultUri(result: CljdocProject) {
+const resultUri = (result: CljdocProject) => {
   return (
     "/d/" + result.group_id + "/" + result.artifact_id + "/" + result.version
   );
-}
+};
 
 const SingleResultView = (props: {
   result: CljdocProject;
