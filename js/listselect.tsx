@@ -1,4 +1,5 @@
-import { h, Component, FunctionComponent } from "preact";
+import { h, FunctionComponent } from "preact";
+import { useEffect, useRef } from "preact/compat";
 import { CljdocProject } from "./switcher";
 
 // Various functions and components used to show lists of results
@@ -8,17 +9,18 @@ import { CljdocProject } from "./switcher";
 // expected that a selectedIndex is passed to indicate which result
 // is the currently selected one.
 
-function restrictToViewport(container: Element, selectedIndex: number) {
-  let containerRect = container.getBoundingClientRect();
-  let selectedRect = container.children[selectedIndex].getBoundingClientRect();
-  let deltaTop = selectedRect.top - containerRect.top;
-  let deltaBottom = selectedRect.bottom - containerRect.bottom;
+const restrictToViewport = (container: Element, selectedIndex: number) => {
+  const containerRect = container.getBoundingClientRect();
+  const selectedRect =
+    container.children[selectedIndex].getBoundingClientRect();
+  const deltaTop = selectedRect.top - containerRect.top;
+  const deltaBottom = selectedRect.bottom - containerRect.bottom;
   if (deltaTop < 0) {
     container.scrollBy(0, deltaTop);
   } else if (deltaBottom > 0) {
     container.scrollBy(0, deltaBottom);
   }
-}
+};
 
 // Props required by ResultsView
 // - results: list of results to render
@@ -44,35 +46,28 @@ type ResultsViewProps = {
   onMouseOver: (index: number) => any;
 };
 
-type ResultsViewState = any;
+export const ResultsView = (props: ResultsViewProps) => {
+  const { results, resultView: ResultView, selectedIndex, onMouseOver } = props;
 
-export class ResultsView extends Component<ResultsViewProps, ResultsViewState> {
-  resultsViewNode?: Element | null;
+  const resultsViewNode = useRef<HTMLDivElement>(null);
 
-  componentDidUpdate(prevProps: ResultsViewProps, _state: ResultsViewState) {
-    if (
-      this.props.selectedIndex !== prevProps.selectedIndex &&
-      this.resultsViewNode
-    ) {
-      restrictToViewport(this.resultsViewNode, this.props.selectedIndex);
-    }
-  }
+  useEffect(() => {
+    restrictToViewport(resultsViewNode.current!, selectedIndex);
+  }, [selectedIndex]);
 
-  render(props: ResultsViewProps, _state: any) {
-    return (
-      <div
-        className="bg-white br1 br--bottom bb bl br b--blue w-100 overflow-y-scroll"
-        style={{ maxHeight: "20rem" }}
-        ref={node => (this.resultsViewNode = node)}
-      >
-        {props.results.map((r, idx) => (
-          <props.resultView
-            result={r}
-            isSelected={props.selectedIndex === idx}
-            selectResult={() => props.onMouseOver(idx)}
-          />
-        ))}
-      </div>
-    );
-  }
-}
+  return (
+    <div
+      className="bg-white br1 br--bottom bb bl br b--blue w-100 overflow-y-scroll"
+      style={{ maxHeight: "20rem" }}
+      ref={resultsViewNode}
+    >
+      {results.map((result, idx) => (
+        <ResultView
+          result={result}
+          isSelected={selectedIndex === idx}
+          selectResult={() => onMouseOver(idx)}
+        />
+      ))}
+    </div>
+  );
+};
