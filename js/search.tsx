@@ -1,5 +1,5 @@
-import { h, Component } from "preact";
-import { useEffect } from "preact/hooks";
+import { h, FunctionComponent } from "preact";
+import { useEffect, useState, Fragment } from "preact/compat";
 import { ResultsView } from "./listselect";
 import { CljdocProject } from "./switcher";
 
@@ -24,11 +24,9 @@ function debounced<T extends (...args: any[]) => any>(
   };
 }
 
-const cleanSearchStr = (str: string) => {
-  // replace square and curly brackets in case people copy from
-  // Leiningen/Boot files or deps.edn
-  return str.replace(/[\{\}\[\]\"]+/g, "");
-};
+// replace square and curly brackets in case people copy from
+// Leiningen/Boot files or deps.edn
+const cleanSearchStr = (str: string) => str.replace(/[\{\}\[\]\"]+/g, "");
 
 export type RawSearchResult = {
   ["artifact-id"]: string;
@@ -74,8 +72,7 @@ const refineSearchResults = (raw: RawSearchResults): SearchResults => ({
 
 const loadResults = (str: string, cb: LoadCallback) => {
   if (!str) return;
-  const uri = "/api/search?q=" + str; //+ "&format=json";
-  fetch(uri)
+  fetch("/api/search?q=" + str)
     .then(response => response.json())
     .then((json: RawSearchResults) => cb(refineSearchResults(json).results));
 };
@@ -143,11 +140,13 @@ const SearchInput = (props: SearchInputProps) => {
   );
 };
 
-const resultUri = (result: CljdocProject) => {
-  return (
-    "/d/" + result.group_id + "/" + result.artifact_id + "/" + result.version
-  );
-};
+const resultUri = (result: CljdocProject) =>
+  "/d/" + result.group_id + "/" + result.artifact_id + "/" + result.version;
+
+const parseProject = (result: CljdocProject) =>
+  result.group_id === result.artifact_id
+    ? result.group_id
+    : result.group_id + "/" + result.artifact_id;
 
 const SingleResultView = (props: {
   result: CljdocProject;
@@ -155,14 +154,10 @@ const SingleResultView = (props: {
   selectResult: () => any;
 }) => {
   const { result, isSelected, selectResult } = props;
-  const project =
-    result.group_id === result.artifact_id
-      ? result.group_id
-      : result.group_id + "/" + result.artifact_id;
+  const project = parseProject(result);
   const docsUri = resultUri(result);
-  const rowClass = isSelected
-    ? "pa3 bb b--light-gray bg-light-blue"
-    : "pa3 bb b--light-gray";
+  const rowClass = `pa3 bb b--light-gray ${isSelected ? "bg-light-blue" : ""}`;
+
   return (
     <a class="no-underline black" href={docsUri}>
       <div class={rowClass} onMouseOver={selectResult}>
@@ -178,6 +173,9 @@ const SingleResultView = (props: {
   );
 };
 
+const When: FunctionComponent<{ condition: boolean }> = props =>
+  props.condition ? <>{props.children}</> : null;
+
 type AppState = {
   results: SearchResult[];
   focused: boolean;
@@ -188,67 +186,66 @@ type AppProps = AppState & {
   initialValue: string | null | undefined;
 };
 
-class App extends Component<AppProps, AppState> {
-  constructor(props: AppProps) {
-    super(props);
-    this.state = { results: [], focused: false, selectedIndex: 0 };
-  }
+const App = (props: AppProps) => {
+  const { initialValue } = props;
 
-  render(_props: AppProps, state: AppState) {
-    function resultsView(selectResult: (index: number) => any) {
-      return (
+  const [appState, setAppState] = useState({
+    results: [],
+    focused: false,
+    selectedIndex: 0
+  } as AppState);
+
+  return (
+    <div className="relative system-sans-serif">
+      <SearchInput
+        initialValue={initialValue}
+        newResultsCallback={rs =>
+          setAppState({ focused: true, results: rs, selectedIndex: 0 })
+        }
+        onEnter={() => {
+          const result = appState.results[appState.selectedIndex];
+
+          if (result) {
+            window.open(resultUri(result), "_self");
+          }
+        }}
+        onArrowUp={() =>
+          setAppState({
+            ...appState,
+            selectedIndex: Math.max(appState.selectedIndex - 1, 0)
+          })
+        }
+        onArrowDown={() =>
+          setAppState({
+            ...appState,
+            selectedIndex: Math.min(
+              appState.selectedIndex + 1,
+              appState.results.length - 1
+            )
+          })
+        }
+        focus={() => {
+          setAppState({ ...appState, focused: true });
+        }}
+        unfocus={() => setAppState({ ...appState, focused: false })}
+      />
+      <When condition={appState.focused && appState.results.length > 0}>
         <div
           class="bg-white br1 br--bottom bb bl br b--blue w-100 absolute"
           style="top: 2.3rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1)"
         >
           <ResultsView
             resultView={SingleResultView}
-            results={state.results}
-            selectedIndex={state.selectedIndex}
-            onMouseOver={selectResult}
+            results={appState.results}
+            selectedIndex={appState.selectedIndex}
+            onMouseOver={(idx: number) =>
+              setAppState({ ...appState, selectedIndex: idx })
+            }
           />{" "}
         </div>
-      );
-    }
-
-    return (
-      <div className="relative system-sans-serif">
-        <SearchInput
-          initialValue={this.props.initialValue}
-          newResultsCallback={rs =>
-            this.setState({ focused: true, results: rs, selectedIndex: 0 })
-          }
-          onEnter={() => {
-            const result = this.state.results[this.state.selectedIndex];
-
-            if (result) {
-              window.open(resultUri(result), "_self");
-            }
-          }}
-          onArrowUp={() =>
-            this.setState({
-              selectedIndex: Math.max(this.state.selectedIndex - 1, 0)
-            })
-          }
-          onArrowDown={() =>
-            this.setState({
-              selectedIndex: Math.min(
-                this.state.selectedIndex + 1,
-                this.state.results.length - 1
-              )
-            })
-          }
-          focus={() => {
-            this.setState({ focused: true });
-          }}
-          unfocus={() => this.setState({ focused: false })}
-        />
-        {state.focused && state.results.length > 0
-          ? resultsView((idx: number) => this.setState({ selectedIndex: idx }))
-          : null}
-      </div>
-    );
-  }
-}
+      </When>
+    </div>
+  );
+};
 
 export { App };
