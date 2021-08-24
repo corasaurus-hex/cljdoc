@@ -1,7 +1,7 @@
-import { h, FunctionComponent } from "preact";
-import { useEffect, useState, Fragment } from "preact/compat";
+import { h } from "preact";
+import { useEffect, useState } from "preact/compat";
+import { CljdocProject, parseProject, resultUri, When } from "./cljdoc";
 import { ResultsView } from "./listselect";
-import { CljdocProject } from "./switcher";
 
 // Doing types for debouncing functions is really hard.
 // https://gist.github.com/ca0v/73a31f57b397606c9813472f7493a940
@@ -140,14 +140,6 @@ const SearchInput = (props: SearchInputProps) => {
   );
 };
 
-const resultUri = (result: CljdocProject) =>
-  "/d/" + result.group_id + "/" + result.artifact_id + "/" + result.version;
-
-const parseProject = (result: CljdocProject) =>
-  result.group_id === result.artifact_id
-    ? result.group_id
-    : result.group_id + "/" + result.artifact_id;
-
 const SingleResultView = (props: {
   result: CljdocProject;
   isSelected: boolean;
@@ -172,9 +164,6 @@ const SingleResultView = (props: {
     </a>
   );
 };
-
-const When: FunctionComponent<{ condition: boolean }> = props =>
-  props.condition ? <>{props.children}</> : null;
 
 type AppState = {
   results: SearchResult[];

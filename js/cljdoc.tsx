@@ -1,3 +1,5 @@
+import { FunctionComponent, Fragment } from "preact/compat";
+
 const isNSPage = () => !!document.querySelector(".ns-page");
 
 const pathSegments = () => window.location.pathname.split("/");
@@ -152,6 +154,32 @@ const trackSidebarScrollPos = () => {
   };
 };
 
+export type CljdocProject = {
+  group_id: string;
+  artifact_id: string;
+  version: string;
+  project_id?: string;
+};
+
+const parseProject = (result: CljdocProject) =>
+  result.group_id === result.artifact_id
+    ? result.group_id
+    : result.group_id + "/" + result.artifact_id;
+
+const addProjectId = (result: CljdocProject): CljdocProject => ({
+  ...result,
+  project_id: parseProject(result)
+});
+
+const resultUri = (result: CljdocProject) =>
+  "/d/" + result.group_id + "/" + result.artifact_id + "/" + result.version;
+
+const When: FunctionComponent<{ condition: boolean }> = props =>
+  props.condition ? <>{props.children}</> : null;
+
+const clamp = (num: number, min: number, max: number) =>
+  Math.min(Math.max(num, min), max);
+
 export {
   initScrollIndicator,
   initToggleRaw,
@@ -160,5 +188,10 @@ export {
   isNSPage,
   isProjectDocumentationPage,
   addPrevNextPageKeyHandlers,
-  trackSidebarScrollPos
+  trackSidebarScrollPos,
+  parseProject,
+  addProjectId,
+  resultUri,
+  When,
+  clamp
 };
