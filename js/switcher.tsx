@@ -6,8 +6,7 @@ import {
   clamp,
   CljdocProject,
   parseProject,
-  resultUri,
-  When
+  resultUri
 } from "./cljdoc";
 import { useEffect, useRef, useState } from "preact/compat";
 
@@ -183,37 +182,39 @@ const Switcher = () => {
   }, []);
 
   useEffect(() => {
-    inputNode.current && inputNode.current.focus();
-  }, [inputNode.current]);
+    switcherState.show && inputNode.current && inputNode.current.focus();
+  }, [switcherState.show, inputNode.current]);
+
+  if (!switcherState.show) {
+    return null;
+  }
 
   return (
-    <When condition={switcherState.show}>
-      <div
-        className="bg-black-30 fixed top-0 right-0 bottom-0 left-0 sans-serif"
-        ref={backgroundNode}
-        onClick={maybeMouseDeactivateSwitcher}
-      >
-        <div className="mw7 center mt6 bg-white pa3 br2 shadow-3">
-          <input
-            placeholder="Jump to recently viewed docs..."
-            className="pa2 w-100 br1 border-box b--blue ba input-reset"
-            ref={inputNode}
-            onKeyUp={maybeSelectResult}
-            onInput={updateResults}
+    <div
+      className="bg-black-30 fixed top-0 right-0 bottom-0 left-0 sans-serif"
+      ref={backgroundNode}
+      onClick={maybeMouseDeactivateSwitcher}
+    >
+      <div className="mw7 center mt6 bg-white pa3 br2 shadow-3">
+        <input
+          placeholder="Jump to recently viewed docs..."
+          className="pa2 w-100 br1 border-box b--blue ba input-reset"
+          ref={inputNode}
+          onKeyUp={maybeSelectResult}
+          onInput={updateResults}
+        />
+        {switcherState.results.length > 0 && (
+          <ResultsView
+            results={switcherState.results}
+            selectedIndex={switcherState.selectedIndex}
+            onMouseOver={index =>
+              setSwitcherState({ ...switcherState, selectedIndex: index })
+            }
+            resultView={SwitcherSingleResultView}
           />
-          <When condition={switcherState.results.length > 0}>
-            <ResultsView
-              results={switcherState.results}
-              selectedIndex={switcherState.selectedIndex}
-              onMouseOver={index =>
-                setSwitcherState({ ...switcherState, selectedIndex: index })
-              }
-              resultView={SwitcherSingleResultView}
-            />
-          </When>
-        </div>
+        )}
       </div>
-    </When>
+    </div>
   );
 };
 

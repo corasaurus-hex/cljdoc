@@ -1,6 +1,6 @@
 import { h } from "preact";
 import { useEffect, useState } from "preact/compat";
-import { CljdocProject, parseProject, resultUri, When } from "./cljdoc";
+import { CljdocProject, parseProject, resultUri } from "./cljdoc";
 import { ResultsView } from "./listselect";
 
 // Doing types for debouncing functions is really hard.
@@ -132,6 +132,7 @@ const SearchInput = (props: SearchInputProps) => {
       autofocus={true}
       placeholder="NEW! Jump to docs..."
       className="pa2 w-100 br1 border-box b--blue ba input-reset"
+      id="cljdoc-search-input"
       onFocus={focusNow}
       onBlur={unfocusLater}
       onKeyDown={onKeyDown}
@@ -218,7 +219,7 @@ const App = (props: AppProps) => {
         }}
         unfocus={() => setAppState({ ...appState, focused: false })}
       />
-      <When condition={appState.focused && appState.results.length > 0}>
+      {appState.focused && appState.results.length > 0 && (
         <div
           class="bg-white br1 br--bottom bb bl br b--blue w-100 absolute"
           style="top: 2.3rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1)"
@@ -232,7 +233,7 @@ const App = (props: AppProps) => {
             }
           />{" "}
         </div>
-      </When>
+      )}
     </div>
   );
 };

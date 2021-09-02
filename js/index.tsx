@@ -21,7 +21,9 @@ const switcher = document.querySelector("#cljdoc-switcher");
 switcher && render(<Switcher />, switcher);
 
 const searchNode: HTMLElement | null = document.querySelector("#cljdoc-search");
-if (searchNode && searchNode.dataset) {
+
+searchNode &&
+  searchNode.dataset &&
   render(
     <App
       initialValue={searchNode.dataset.initialValue}
@@ -31,9 +33,9 @@ if (searchNode && searchNode.dataset) {
     />,
     searchNode
   );
-}
 
-render(<Navigator />, document.querySelector("#js--cljdoc-navigator")!);
+const navigator = document.querySelector("#js--cljdoc-navigator");
+navigator && render(<Navigator />, navigator);
 
 if (isNSPage()) {
   initScrollIndicator();

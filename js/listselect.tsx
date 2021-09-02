@@ -1,6 +1,6 @@
 import { h, FunctionComponent } from "preact";
 import { useEffect, useRef } from "preact/compat";
-import { CljdocProject } from "./switcher";
+import { CljdocProject } from "./cljdoc";
 
 // Various functions and components used to show lists of results
 

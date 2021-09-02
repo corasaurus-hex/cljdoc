@@ -1,5 +1,3 @@
-import { FunctionComponent, Fragment } from "preact/compat";
-
 const isNSPage = () => !!document.querySelector(".ns-page");
 
 const pathSegments = () => window.location.pathname.split("/");
@@ -174,9 +172,6 @@ const addProjectId = (result: CljdocProject): CljdocProject => ({
 const resultUri = (result: CljdocProject) =>
   "/d/" + result.group_id + "/" + result.artifact_id + "/" + result.version;
 
-const When: FunctionComponent<{ condition: boolean }> = props =>
-  props.condition ? <>{props.children}</> : null;
-
 const clamp = (num: number, min: number, max: number) =>
   Math.min(Math.max(num, min), max);
 
@@ -192,6 +187,5 @@ export {
   parseProject,
   addProjectId,
   resultUri,
-  When,
   clamp
 };
