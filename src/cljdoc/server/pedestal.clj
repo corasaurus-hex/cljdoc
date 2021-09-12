@@ -67,7 +67,7 @@
                  ;; instead of rendering a mostly white page we
                  ;; redirect to the README/first listed article
                  (let [location (routes/url-for :artifact/doc :params (assoc path-params :article-slug first-article-slug))]
-                   (assoc ctx :response {:status 302, :headers {"Location" location}}))
+                   (assoc ctx :response {:status 302, :headers {"Location" location} :body ""}))
 
                  (if cache-bundle
                    (pu/ok-html ctx (html/render page-type path-params {:cache-bundle cache-bundle
@@ -212,7 +212,8 @@
                (if current?
                  (assoc ctx :response
                         {:status 307
-                         :headers {"Location" (routes/url-for (:route-name route) :path-params (merge (:path-params request) artifact-entity))}})
+                         :headers {"Location" (routes/url-for (:route-name route) :path-params (merge (:path-params request) artifact-entity))}
+                         :body ""})
                  (update-in ctx [:request :path-params] merge artifact-entity))))}))
 
 (defn view
@@ -231,7 +232,7 @@
 (defn redirect-to-build-page
   [ctx build-id]
   {:pre [(some? build-id)]}
-  (assoc ctx :response {:status 303 :headers {"Location" (str "/builds/" build-id)}}))
+  (assoc ctx :response {:status 303 :headers {"Location" (str "/builds/" build-id)} :body ""}))
 
 (defn request-build
   "Create an interceptor that will initiate documentation builds based
@@ -368,7 +369,8 @@
                                                             :params
                                                             {:group-id (util/group-id project)
                                                              :artifact-id (util/artifact-id project)
-                                                             :version release})}}
+                                                             :version release})}
+                       :body ""}
                       {:status 404
                        :headers {}
                        :body (format "Could not find release for %s" project)})
@@ -391,7 +393,8 @@
                  (and (.endsWith uri "/")
                       (not= uri "/"))
                  (assoc :response {:status 301
-                                   :headers {"Location" (subs uri 0 (dec (.length uri)))}}))))}))
+                                   :headers {"Location" (subs uri 0 (dec (.length uri)))}
+                                   :body ""}))))}))
 
 (def not-found-interceptor
   (interceptor/interceptor
