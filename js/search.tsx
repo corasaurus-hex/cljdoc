@@ -154,7 +154,12 @@ const SingleResultView = (props: {
   return (
     <a class="no-underline black" href={docsUri}>
       <div class={rowClass} onMouseOver={selectResult}>
-        <h4 class="dib ma0">
+        <h4
+          class="dib ma0"
+          data-selected={isSelected.toString()}
+          data-project={project}
+          data-version={result.version}
+        >
           {project}
           <span class="ml2 gray normal">{result.version}</span>{" "}
         </h4>{" "}
