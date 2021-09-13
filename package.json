@@ -6,6 +6,7 @@
     "dev": "parcel watch js/index.tsx --dist-dir resources-compiled/public/js/ --public-url .",
     "build": "parcel build js/index.tsx --dist-dir resources-compiled/public/js/ --public-url .",
     "prepare": "husky install",
+    "integration-tests": "jest --runInBand --passWithNoTests --config=jest-int.config.js",
     "typecheck": "npx tsc --watch"
   },
   "dependencies": {
@@ -13,10 +14,20 @@
     "preact": "^10.5.14"
   },
   "devDependencies": {
+    "@types/expect-puppeteer": "^4.4.6",
+    "@types/jest": "^27.0.1",
+    "@types/jest-dev-server": "^5.0.0",
+    "@types/jest-environment-puppeteer": "^4.4.1",
+    "@types/puppeteer": "^5.4.4",
+    "axios": "^0.21.4",
     "husky": "^6.0.0",
+    "jest": "^27.1.1",
+    "jest-puppeteer": "^5.0.4",
     "parcel": "^2.0.0-rc.0",
     "prettier": "^2.3.2",
     "pretty-quick": "^3.1.1",
+    "puppeteer": "^10.2.0",
+    "ts-jest": "^27.0.5",
     "typescript": "^4.3.5"
   }
 }
